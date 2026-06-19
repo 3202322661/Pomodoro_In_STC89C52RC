@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\display.obj",
+".\Objects\buzzer.obj",
+".\Objects\button.obj",
+".\Objects\pomodoro.obj",
+".\Objects\timer.obj" 
+TO ".\Objects\51Timer" 
+PRINT(".\Listings\51Timer.m51") RAMSIZE(256) 

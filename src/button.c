@@ -1,6 +1,20 @@
+/**
+ * button.c - 按键扫描模块
+ *
+ * 三个独立按键, 10ms 消抖, 按下后等待释放 (阻塞式)。
+ * 按键优先级: KEY_SET > KEY_ADD > KEY_START_STOP
+ *
+ * 硬件: P3.2(设置), P3.3(启停), P3.4(递加), 均为低电平有效。
+ */
+
 #include "config.h"
 #include "button.h"
 
+/**
+ * DelayMS - 毫秒级延时 (基于指令周期粗略估算)
+ *   适用于 11.0592MHz / 12T 模式。
+ *   精确度 ≈ ±10%, 对按键消抖而言足够。
+ */
 static void DelayMS(unsigned int ms)
 {
 	unsigned int i, j;
@@ -10,6 +24,22 @@ static void DelayMS(unsigned int ms)
 	}
 }
 
+/**
+ * Button_Scan - 扫描三个按键 (阻塞式消抖)
+ *
+ * 消抖流程:
+ *   1. 检测低电平
+ *   2. 延时 10ms
+ *   3. 复检低电平 (消抖确认)
+ *   4. 等待按键释放 (防止连发)
+ *   5. 返回按键 ID
+ *
+ * 返回值:
+ *   BTN_SET   — KEY_SET 按下
+ *   BTN_START — KEY_START_STOP 按下
+ *   BTN_ADD   — KEY_ADD 按下
+ *   BTN_NONE  — 无按键按下
+ */
 unsigned char Button_Scan()
 {
 	if (KEY_SET == 0)

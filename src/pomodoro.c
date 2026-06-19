@@ -1,3 +1,24 @@
+/**
+ * pomodoro.c - 番茄钟核心状态机
+ *
+ * 8 模式状态管理系统, 严格匹配以下模式规范:
+ *
+ *   MODE_IDLE        (0)  空闲, 等待启动工作
+ *   MODE_WORK_RUN    (1)  工作倒计时运行中
+ *   MODE_WORK_PAUSE  (2)  工作倒计时暂停
+ *   MODE_WORK_DONE   (3)  工作完成, 等待启动休息
+ *   MODE_REST_RUN    (4)  休息倒计时运行中
+ *   MODE_REST_PAUSE  (5)  休息倒计时暂停
+ *   MODE_SET_WORK    (6)  设置工作时长 (分钟位闪烁)
+ *   MODE_SET_REST    (7)  设置休息时长 (秒位闪烁)
+ *
+ * 状态转移规则:
+ *   KEY_SET:    0/1/2 → 6 → 7 → 0 (循环切换)
+ *   KEY_START:  0/2 → 1,  1 → 2,  3/5 → 4,  4 → 5
+ *   KEY_ADD:    仅 mode=6 时递增 work_time, mode=7 时递增 rest_time
+ *               (范围 1~60, 超出回绕至 1)
+ */
+
 #include "config.h"
 #include "pomodoro.h"
 #include "button.h"
