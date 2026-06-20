@@ -30,6 +30,8 @@
 #define TIME_MAX 60
 #define TIME_MIN 1
 
+#define AUTO_SLEEP_SEC 300
+
 /* ============================================================
  * 运行模式定义
  *
@@ -88,6 +90,7 @@ extern uint8_t min;
 extern uint8_t sec;
 
 extern uint16_t ms_count;
+extern uint16_t idle_seconds;
 
 extern bit half_sec_flag;
 extern bit sec_flag;

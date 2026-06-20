@@ -12,6 +12,7 @@
 #include "button.h"
 #include "buzzer.h"
 #include "pomodoro.h"
+#include "sleep.h"
 
 void main()
 {
@@ -19,6 +20,7 @@ void main()
 	/* ---- Ó²¼þ³õÊ¼»¯ ---- */
 	Timer0_Init();
 	Pomodoro_Init();
+	Sleep_Init();
 	
 	Update_Display_Buffer();
 	
@@ -31,6 +33,7 @@ void main()
 		btn = Button_Scan();
 		if (btn != BTN_NONE)
 		{
+			idle_seconds = 0;
 			Pomodoro_HandleButton(btn);
 		}
 		
@@ -39,6 +42,21 @@ void main()
 		{
 			sec_flag = 0;
 			Pomodoro_ProcessTick();
+			
+			if (Sleep_IsEligible())
+			{
+				idle_seconds++;
+				if (idle_seconds >= AUTO_SLEEP_SEC)
+				{
+					Sleep_EnterPowerDown();
+					
+					Button_Scan();
+				}
+			}
+			else 
+			{
+				idle_seconds = 0;
+			}
 		}
 	}
 }

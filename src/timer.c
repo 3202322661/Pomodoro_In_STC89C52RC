@@ -38,6 +38,7 @@ uint8_t min = DEFAULT_WORK_MIN;
 uint8_t sec = 0;
 
 uint16_t ms_count = 0;
+uint16_t idle_seconds = 0;
 bit half_sec_flag = 0;
 bit sec_flag = 0;
 
