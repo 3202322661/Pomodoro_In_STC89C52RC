@@ -9,15 +9,16 @@
 
 #include "config.h"
 #include "button.h"
+#include "buzzer.h"
 
 /**
  * DelayMS - 毫秒级延时 (基于指令周期粗略估算)
  *   适用于 11.0592MHz / 12T 模式。
  *   精确度 ≈ ±10%, 对按键消抖而言足够。
  */
-static void DelayMS(unsigned int ms)
+static void DelayMS(uint16_t ms)
 {
-	unsigned int i, j;
+	uint16_t i, j;
 	for (i = ms; i > 0; i--)
 	{
 		for (j = 110; j> 0; j--);
@@ -40,13 +41,14 @@ static void DelayMS(unsigned int ms)
  *   BTN_ADD   — KEY_ADD 按下
  *   BTN_NONE  — 无按键按下
  */
-unsigned char Button_Scan()
+uint8_t Button_Scan()
 {
 	if (KEY_SET == 0)
 	{
 		DelayMS(10);
 		if (KEY_SET == 0)
 		{
+			Beep_Click();//新增按键提示音
 			while (KEY_SET == 0);
 			return BTN_SET;
 		}
@@ -57,6 +59,7 @@ unsigned char Button_Scan()
 		DelayMS(10);
 		if (KEY_ADD == 0)
 		{
+			Beep_Click();
 			while (KEY_ADD == 0);
 			return BTN_ADD;
 		}
@@ -67,6 +70,7 @@ unsigned char Button_Scan()
 		DelayMS(10);
 		if (KEY_START_STOP == 0)
 		{
+			Beep_Click();
 			while (KEY_START_STOP == 0);
 			return BTN_START_STOP;
 		}

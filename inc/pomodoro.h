@@ -2,7 +2,7 @@
 #define __POMODORO_H__
 
 void Pomodoro_Init();
-void Pomodoro_HandleButton(unsigned char btn);
+void Pomodoro_HandleButton(uint8_t btn);
 void Pomodoro_ProcessTick();
 
 #endif

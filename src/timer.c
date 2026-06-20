@@ -15,7 +15,7 @@
 #include "config.h"
 #include "timer.h"
 
-unsigned char code SEG_TABLE[] = {
+uint8_t code SEG_TABLE[] = {
 	0x3F,
 	0x06,
 	0x5B,
@@ -29,15 +29,15 @@ unsigned char code SEG_TABLE[] = {
 	0x00
 };
 
-unsigned char display_buffer[4] = {0,0,0,0};
+uint8_t display_buffer[4] = {0,0,0,0};
 
-unsigned char mode = MODE_IDLE;
-unsigned char work_time = DEFAULT_WORK_MIN;
-unsigned char rest_time = DEFAULT_REST_MIN;
-unsigned char min = DEFAULT_WORK_MIN;
-unsigned char sec = 0;
+uint8_t mode = MODE_IDLE;
+uint8_t work_time = DEFAULT_WORK_MIN;
+uint8_t rest_time = DEFAULT_REST_MIN;
+uint8_t min = DEFAULT_WORK_MIN;
+uint8_t sec = 0;
 
-unsigned int ms_count = 0;
+uint16_t ms_count = 0;
 bit half_sec_flag = 0;
 bit sec_flag = 0;
 
@@ -54,7 +54,7 @@ void Timer0_Init()
 
 void Timer0_ISR() interrupt 1
 {
-	static unsigned char digit = 0;
+	static uint8_t digit = 0;
 	
 	TH0 = TIMER0_TH;
 	TL0 = TIMER0_TL;

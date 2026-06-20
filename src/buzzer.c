@@ -10,21 +10,35 @@
 #include "config.h"
 #include "buzzer.h"
 
-static void DelayMS(unsigned int ms)
+static void DelayMS(uint16_t ms)
 {
-	unsigned int i, j;
+	uint16_t i, j;
 	for (i = ms; i > 0; i--)
 	{
 		for (j = 110; j> 0; j--);
 	}
 }
 
+void Beep_Click()
+{
+	uint8_t i;
+	for (i = 0; i < 30; i++)
+	{
+		BUZZER = 1;
+    DelayMS(1);
+    BUZZER = 0;
+    DelayMS(1);
+	}
+	
+	BUZZER = 0;
+}
+
 void Beep_Alarm() 
 {
-	unsigned int i, j;
+	uint8_t i, j;
 	for (j = 0; j < 5; j++) 
 	{
-		for (i = 0; i < 300; i++) 
+		for (i = 0; i < 255; i++) 
 		{
 			BUZZER = 1;
 			DelayMS(1);

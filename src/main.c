@@ -15,7 +15,7 @@
 
 void main()
 {
-	unsigned char btn;
+	uint8_t btn;
 	/* ---- Ó²¼þ³õÊ¼»¯ ---- */
 	Timer0_Init();
 	Pomodoro_Init();

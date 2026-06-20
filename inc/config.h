@@ -3,6 +3,12 @@
 
 #include <reg52.h>
 
+/*============================================================
+ * 重定义所需类型
+ *============================================================*/
+ typedef unsigned char uint8_t;
+ typedef unsigned int uint16_t;
+
 /* ============================================================
  * 定时器参数 (Timer0, Mode 1, 16-bit)
  *
@@ -64,7 +70,7 @@ sbit BUZZER = P1^5;
  *   段码表: 0x3F=0, 0x06=1, 0x5B=2, 0x4F=3, 0x66=4,
  *           0x6D=5, 0x7D=6, 0x07=7, 0x7F=8, 0x6F=9, 0x00=blank
  * ============================================================ */
-extern unsigned char code SEG_TABLE[];
+extern uint8_t code SEG_TABLE[];
 
 /* ============================================================
  * 数码管显示缓冲 (4 位)
@@ -73,15 +79,15 @@ extern unsigned char code SEG_TABLE[];
  *   display_buffer[2]: 秒数十位
  *   display_buffer[3]: 秒数个位
  * ============================================================ */
-extern unsigned char display_buffer[4];
+extern uint8_t display_buffer[4];
 
-extern unsigned char mode;
-extern unsigned char work_time;
-extern unsigned char rest_time;
-extern unsigned char min;
-extern unsigned char sec;
+extern uint8_t mode;
+extern uint8_t work_time;
+extern uint8_t rest_time;
+extern uint8_t min;
+extern uint8_t sec;
 
-extern unsigned int ms_count;
+extern uint16_t ms_count;
 
 extern bit half_sec_flag;
 extern bit sec_flag;

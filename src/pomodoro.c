@@ -34,7 +34,7 @@ void Pomodoro_Init()
 	BUZZER = 0;
 }
 
-void Pomodoro_HandleButton(unsigned char btn)
+void Pomodoro_HandleButton(uint8_t btn)
 {
 	if (btn == BTN_NONE) return;
 	

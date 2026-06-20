@@ -10,6 +10,6 @@
 #define BTN_START_STOP 2
 #define BTN_ADD 3
 
-unsigned char Button_Scan();
+uint8_t Button_Scan();
 
 #endif
