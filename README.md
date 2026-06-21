@@ -25,35 +25,34 @@ P2.0~P2.3  ────   数码管位选 0~3   (低电平有效)
 P3.2       ────   按键 KEY_SET     (设置键, 低电平有效)
 P3.3       ────   按键 KEY_START   (启停键, 低电平有效)
 P3.4       ────   按键 KEY_ADD     (递加键, 低电平有效)
-P1.5       ────   有源蜂鸣器       (三极管驱动)
+P1.5       ────   无源蜂鸣器       (三极管驱动)
 ```
-
-> 数码管段码线与 P0 口之间建议串联 220Ω 限流电阻。P0 口需外接 10kΩ 上拉电阻排。
-> 位选线 P2.0~P2.3 需通过三极管 (如 9012 PNP) 扩流驱动，每个位选需串联基极限流电阻。
 
 ## 项目结构
 
 ```
-51Timer/
+Pomodoro/
 ├── Pomodoro.uvproj      # Keil uVision5 工程文件
-├── Pomodoro.uvopt       # Keil 工程选项文件
+├── Pomodoro.uvopt       # 工程选项
 ├── README.md            # 本文档
 ├── inc/                 # 头文件
-│   ├── config.h         # 引脚定义 / 定时器参数 / 模式常量 / 全局变量声明
-│   ├── timer.h          # Timer0 1ms 中断 (数码管扫描 + 时基)
-│   ├── display.h        # 数码管缓冲更新 / 闪烁控制
-│   ├── button.h         # 3 键消抖扫描
-│   ├── buzzer.h         # 蜂鸣器告警音
-│   ├── pomodoro.h       # 8 模式状态机 / 倒计时逻辑
-│   └── sleep.h          # 深度休眠与一键唤醒
+│   ├── config.h         # 引脚分配 / 定时器参数 / 模式常量 / 全局变量声明
+│   ├── timer.h          # Timer0 1ms 中断 (ISR 含数码管动态扫描 + 时基)
+│   ├── display.h        # 数码管缓冲更新 / 设置模式闪烁控制
+│   ├── button.h         # 4 键消抖扫描 (10ms 阻塞复检)
+│   ├── buzzer.h         # 蜂鸣器 5 声短鸣告警
+│   ├── pomodoro.h       # 8 模式状态机 / 倒计时递减逻辑
+│   ├── sleep.h          # 深度休眠 (PCON 掉电) / INT0/INT1 唤醒
+│   └── eeprom.h         # EEPROM 断电保存 (IAP 操作)
 └── src/                 # 源文件
-    ├── main.c           # 主程序入口 (初始化 + 主循环 + 休眠管理)
-    ├── timer.c          # Timer0 ISR (动态扫描 + ms_count/sec_flag + idle_seconds)
-    ├── display.c        # Update_Display_Buffer (闪烁控制)
-    ├── button.c         # 3 键 10ms 消抖扫描
-    ├── buzzer.c         # Beep_Alarm (5 声短鸣)
-    ├── pomodoro.c       # 8 模式状态转移 + 倒计时递减
-    └── sleep.c          # PCON 掉电管理 + INT0/INT1 唤醒 ISR
+    ├── main.c           # 主程序 (初始化 → 显示 → 按键 → 计时 → 休眠)
+    ├── timer.c          # Timer0 ISR + 全局变量定义 (唯一数据定义点)
+    ├── display.c        # Update_Display_Buffer (闪烁逻辑)
+    ├── button.c         # Button_Scan (3/4 键消抖)
+    ├── buzzer.c         # Beep_Alarm (阻塞式 5 周期方波)
+    ├── pomodoro.c       # Pomodoro_HandleButton / ProcessTick
+    ├── sleep.c          # Sleep_EnterPowerDown / INT0_ISR / INT1_ISR
+    └── eeprom.c         # IAP 扇区擦除 / 字节读写 / 魔数校验
 ```
 
 ## 编译与烧录
@@ -154,6 +153,69 @@ TH0 = 0xFC, TL0 = 0x66
   INT0 (P3.2) 或 INT1 (P3.3) 下降沿 → 唤醒
   唤醒后从 PCON |= 0x02 的下一条指令继续执行
 ```
+
+## EEPROM 断电保存
+
+STC89C52RC 内置 Data Flash (EEPROM)，通过 IAP (In-Application Programming) 方式在程序中读写，断电后数据不丢失。系统利用此特性记忆用户自定义的工作时长和休息时长。
+
+### 存储布局
+
+```
+EEPROM 扇区 0 (512 字节, 地址 0x0000~0x01FF):
+  [0x0000]  0xA5  ← 魔数 (标志位: EEPROM 已有效初始化)
+  [0x0001]  NN    ← work_time  (工作时间, 1~60 分钟)
+  [0x0002]  NN    ← rest_time  (休息时间, 1~60 分钟)
+  [0x0003]  0xFF  ← 保留
+    ...
+  [0x01FF]  0xFF
+```
+
+### 读写机制
+
+**保存 (EEPROM_Save)**
+
+调用时机: 用户退出设置模式时 (KEY_SET 从 SET_WORK → SET_REST，或 SET_REST → IDLE)
+
+操作流程:
+
+一、`EA=0` 暂停所有中断 (IAP 占用 Flash 总线期间禁止中断)
+
+二、`IAP_EraseSector(0x0000)` — 擦除整个扇区 (512 字节全部置为 0xFF)
+
+三、`IAP_WriteByte(0x0000, 0xA5)` — 写入魔数
+
+四、`IAP_WriteByte(0x0000, work_time)` — 写入工作时长
+
+五、`IAP_WriteByte(0x0000, rest_time)` — 写入休息时长
+
+六、`EA=1` 恢复中断
+
+**加载 (EEPROM_Load)**
+
+调用时机: 系统上电初始化 (Pomodoro_Init)
+
+操作流程:
+
+一、`EA=0` 暂停中断
+
+二、`IAP_ReadByte(0x0000)` — 读取魔数
+
+三、若魔数 == 0xA5 → 读取 work_time / rest_time 并覆盖全局变量 (附带范围校验 1~60)
+
+四、若魔数 ≠ 0xA5 → 首次使用 → 写入默认值 (25/5) + 魔数初始化
+
+五、`EA=1` 恢复中断
+
+### IAP 寄存器摘要
+
+| 寄存器 | 地址 | 功能 |
+|--------|------|------|
+| IAP_DATA | 0xE2 | 数据寄存器 (写时装入数据, 读时获取数据) |
+| IAP_ADDRH | 0xE3 | 目标地址高字节 |
+| IAP_ADDRL | 0xE4 | 目标地址低字节 |
+| IAP_CMD | 0xE5 | 命令: 0x01=读, 0x02=写, 0x03=擦除 |
+| IAP_TRIG | 0xE6 | 触发: 依次写 0x46, 0xB9 启动操作 |
+| IAP_CONTR | 0xE7 | 控制: 0x83=使能 IAP + 3 周期等待 |
 
 ## 许可
 

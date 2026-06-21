@@ -53,6 +53,44 @@
 #define MODE_SET_WORK 6
 #define MODE_SET_REST 7
 
+#define IAP_CMD_READ 0x01
+#define IAP_CMD_WRITE 0x02
+#define IAP_CMD_ERASE 0x03
+
+#define IAP_ENABLE 0x83
+
+/* EEPROM 地址分配 (使用扇区 0, 地址 0x0000~0x01FF)
+ *   0x0000: 魔数 (0xA5 = 已初始化)
+ *   0x0001: work_time (工作时长, 1~60 分钟)
+ *   0x0002: rest_time (休息时长, 1~60 分钟)
+ *   0x0003~0x01FF: 保留
+ */
+#define EEPROM_MAGIC_ADDR 0x0000
+#define EEPROM_WORK_ADDR 0x0001
+#define EEPROM_REST_ADDR 0x0002
+#define EEPROM_MAGIC 0xA5
+
+/* ============================================================
+ * STC89C52RC 内部 EEPROM (IAP 操作寄存器)
+ *
+ * STC89C52RC 内置 Data Flash (EEPROM), 通过 IAP 方式读写,
+ * 断电数据不丢失。用于保存用户预设的工作/休息时长。
+ *
+ * IAP 寄存器地址:
+ *   IAP_DATA  (0xE2): 数据寄存器
+ *   IAP_ADDRH (0xE3): 目标地址高字节
+ *   IAP_ADDRL (0xE4): 目标地址低字节
+ *   IAP_CMD   (0xE5): 命令寄存器 (0x01=读, 0x02=写, 0x03=扇区擦除)
+ *   IAP_TRIG  (0xE6): 触发寄存器 (依次写 0x46, 0xB9 触发操作)
+ *   IAP_CONTR (0xE7): 控制寄存器 (bit7=IAPEN, bit[4:0]=等待时间)
+ * ============================================================ */
+sfr IAP_DATA = 0xE2;
+sfr IAP_ADDRH = 0xE3;
+sfr IAP_ADDRL = 0xE4;
+sfr IAP_CMD = 0xE5;
+sfr IAP_TRIG = 0xE6;
+sfr IAP_CONTR = 0xE7;
+
 /* ============================================================
  * 按键引脚定义 (独立按键, 低电平有效)
  * ============================================================ */
@@ -94,5 +132,8 @@ extern uint16_t idle_seconds;
 
 extern bit half_sec_flag;
 extern bit sec_flag;
+
+extern void EEPROM_Save();
+extern void EEPROM_Load();
 
 #endif

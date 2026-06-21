@@ -29,6 +29,9 @@ void Pomodoro_Init()
 	mode = MODE_IDLE;
 	work_time = DEFAULT_WORK_MIN;
 	rest_time = DEFAULT_REST_MIN;
+	
+	EEPROM_Load();
+	
 	min = work_time;
 	sec = 0;
 	BUZZER = 0;
@@ -40,21 +43,32 @@ void Pomodoro_HandleButton(uint8_t btn)
 	
 	if (btn == BTN_SET)
 	{
-	if (mode == MODE_IDLE || 
+		uint8_t prev_mode = mode;
+		
+		if (mode == MODE_IDLE || 
 			mode == MODE_WORK_RUN || 
 			mode == MODE_WORK_PAUSE) 
 		{
 			mode = MODE_SET_WORK;
 			min  = work_time;
 			sec  = 0;
-		} else if (mode == MODE_SET_WORK) {
+		} 
+		else if (mode == MODE_SET_WORK) 
+		{
 			mode = MODE_SET_REST;
 			min  = rest_time;
 			sec  = 0;
-		} else if (mode == MODE_SET_REST) {
+		} 
+		else if (mode == MODE_SET_REST) 
+		{
       mode = MODE_IDLE;
       min  = work_time;
       sec  = 0;
+		}
+		
+		if (prev_mode == MODE_SET_WORK || prev_mode == MODE_SET_REST)
+		{
+			EEPROM_Save();
 		}
 		return;
 	}
